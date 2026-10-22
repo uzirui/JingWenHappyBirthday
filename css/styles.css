@@ -234,3 +234,24 @@ form button:hover {
             transform: translateY(-900px) rotate(600deg);
   }
 }
+
+/* 手机端适配 */
+@media (max-width: 480px) {
+  .container {
+    margin-top: 18%;
+    padding: 40px 0;
+    height: auto;
+  }
+  .container h1 {
+    font-size: 30px;
+  }
+  form input,
+  form button {
+    width: 78vw;
+    max-width: 250px;
+  }
+  form input:focus {
+    width: 86vw;
+    max-width: 300px;
+  }
+}

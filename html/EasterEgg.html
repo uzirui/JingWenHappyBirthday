@@ -12,7 +12,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Happy Birthday</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>静汶 | 生日快乐</title>
 
 
 </head>
@@ -162,18 +163,22 @@
     c2.width = c3.width = window.innerWidth;
     c2.height = c3.height = window.innerHeight;
     ctx1.fillStyle = '#000';
-    const text = '小笨蛋！ 生日快乐'
-    let textWidth = 99999999;
+    const text = '小寿星 要永远开心哦'
+    const chars = Array.from(text);
 
-    while (textWidth > window.innerWidth) {
-      ctx1.font = `900 ${fontSize--}px Arial`;
-      textWidth = ctx1.measureText(text).width;
-    }
+    // 竖排：自上而下逐字绘制，字号受限于单字宽度与整列高度
+    const maxByWidth = window.innerWidth * 0.85;
+    const maxByHeight = window.innerHeight * 0.85 / (chars.length * 1.15);
+    fontSize = Math.floor(Math.min(fontSize, maxByWidth, maxByHeight));
 
-    c1.width = textWidth;
-    c1.height = fontSize * 1.5;
+    c1.width = Math.ceil(fontSize * 1.2);
+    c1.height = Math.ceil(fontSize * 1.15 * chars.length);
     ctx1.font = `900 ${fontSize}px Arial`;
-    ctx1.fillText(text, 0, fontSize);
+    ctx1.textAlign = 'center';
+    ctx1.textBaseline = 'middle';
+    chars.forEach((ch, i) => {
+      ctx1.fillText(ch, c1.width / 2, fontSize * 0.6 + i * fontSize * 1.15);
+    });
     const imgData = ctx1.getImageData(0, 0, c1.width, c1.height);
     for (let i = 0, max = imgData.data.length; i < max; i += 4) {
       const alpha = imgData.data[i + 3];
@@ -230,8 +235,8 @@
         let { x, y } = targets[idx];
         targets.splice(idx, 1);
 
-        x += c2.width / 2 - textWidth / 2;
-        y += c2.height / 2 - fontSize / 2;
+        x += c2.width / 2 - c1.width / 2;
+        y += c2.height / 2 - c1.height / 2;
 
         return { x, y };
       }

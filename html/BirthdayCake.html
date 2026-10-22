@@ -5,7 +5,7 @@
 
   <meta charset="UTF-8">
 
-  <title>Happy Birthday</title>
+  <title>静汶 | 生日快乐</title>
   <link rel="stylesheet" href="../css/styless.css" media="screen" type="text/css" />
 </head>
 
@@ -181,11 +181,9 @@
     <img src="../img/HappyBirthday.png">
   </div>
   <div class="button-style2">
-    <a href="Memories.html" class="lk1">
+    <a href="./EasterEgg.html" class="lk1">
       <div class="link1">
-        <div class="bt1">
-			<a href="./EasterEgg.html">喜欢</a>
-        </div>
+        <div class="bt1">喜欢</div>
       </div>
     </a>
   </div>
@@ -210,8 +208,33 @@
     <li></li>
     <li></li>
   </ul>
-  <script src='../js/jquery.js'></script>
-  <audio src="../music/2.mp3" autoplay="autoplay" loop="loop">
+  <audio src="../music/2.mp3" autoplay="autoplay" loop="loop"></audio>
+
+  <script>
+    // "我不喜欢"按钮：手指按下/鼠标悬停/点击时随机跳到其他位置，让用户点不着
+    (function () {
+      var btn = document.querySelector('.button-style1');
+      if (!btn) return;
+
+      function dodge(e) {
+        e.preventDefault();
+        var w = btn.offsetWidth || 170,
+            h = btn.offsetHeight || 60,
+            x = 20 + Math.random() * Math.max(10, window.innerWidth - w - 40),
+            y = 60 + Math.random() * Math.max(10, window.innerHeight - h - 130);
+
+        btn.style.animation = 'none';
+        btn.style.opacity = '1';
+        btn.style.left = x + 'px';
+        btn.style.right = 'auto';
+        btn.style.top = y + 'px';
+      }
+
+      btn.addEventListener('touchstart', dodge, { passive: false });
+      btn.addEventListener('mouseenter', dodge);
+      btn.addEventListener('click', dodge);
+    })();
+  </script>
 </body>
 
 </html>

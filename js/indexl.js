@@ -1,7 +1,9 @@
 
+// 最近一次序列动作的时间戳（顶层变量，供 S.UI 的 timedAction 写入、S.init 的主循环读取）
+var lastActionTime = Date.now();
+
 var S = {
   init: function () {
-    var m=0;
     var action = window.location.href,
         i = action.indexOf('?a=');
 
@@ -11,15 +13,14 @@ var S = {
     if (i !== -1) {
       S.UI.simulate(decodeURI(action).substring(i + 3));
     } else {
-      S.UI.simulate('Hi 思捷|小朋友|生日快乐|happy birthday|#countdown 10||');
+      S.UI.simulate('静汶|生日快乐|10.26|#countdown 10|');
     }
 
     S.Drawing.loop(function () {
-            m++;
       S.Shape.render();
-      //console.log(m);
-      if(m==4500){
-        window.location.href="../html/BirthdayCake.html";
+      // 序列最后一个动作完成约5秒后跳转蛋糕页（按真实时间，不受手机帧率影响）
+      if (Date.now() - lastActionTime > 5000) {
+        window.location.href = "../html/BirthdayCake.html";
       }
     });
 
@@ -118,11 +119,13 @@ S.UI = (function () {
   function timedAction(fn, delay, max, reverse) {
     clearInterval(interval);
     currentAction = reverse ? max : 1;
+    lastActionTime = Date.now();
     fn(currentAction);
 
     if (!max || (!reverse && currentAction < max) || (reverse && currentAction > 0)) {
       interval = setInterval(function () {
         currentAction = reverse ? currentAction - 1 : currentAction + 1;
+        lastActionTime = Date.now();
         fn(currentAction);
 
         if ((!reverse && max && currentAction === max) || (reverse && currentAction === 0)) {
@@ -204,7 +207,7 @@ S.UI = (function () {
         default:
           S.Shape.switchShape(S.ShapeBuilder.letter(current[0] === cmd ? 'What?' : current));
       }
-    }, 2000, sequence.length);
+    }, 3000, sequence.length);
   }
 
   function checkInputWidth(e) {
@@ -475,7 +478,7 @@ S.Dot.prototype = {
 
 
 S.ShapeBuilder = (function () {
-  var gap = 13,
+  var gap = 10,
       shapeCanvas = document.createElement('canvas'),
       shapeContext = shapeCanvas.getContext('2d'),
       fontSize = 500,
@@ -490,35 +493,34 @@ S.ShapeBuilder = (function () {
   }
 
   function processCanvas() {
-    var pixels = shapeContext.getImageData(0, 0, shapeCanvas.width, shapeCanvas.height).data;
+    var pixels = shapeContext.getImageData(0, 0, shapeCanvas.width, shapeCanvas.height).data,
         dots = [],
-        pixels,
         x = 0,
         y = 0,
+        idx = 0,
         fx = shapeCanvas.width,
         fy = shapeCanvas.height,
         w = 0,
         h = 0;
 
-    for (var p = 0; p < pixels.length; p += (4 * gap)) {
-      if (pixels[p + 3] > 0) {
-        dots.push(new S.Point({
-          x: x,
-          y: y
-        }));
+    // 按gap网格逐行扫描画布像素：行×列双重循环，确保横竖采样间隔一致
+    // （原单指针扫描在换行时会多偏移一行，垂直间隔变成gap+1，
+    //   汉字细横笔画恰好落在两采样行之间时会被整条跳过，导致"静"等字缺块）
+    for (y = 0; y < shapeCanvas.height; y += gap) {
+      for (x = 0; x < shapeCanvas.width; x += gap) {
+        idx = (y * shapeCanvas.width + x) * 4;
 
-        w = x > w ? x : w;
-        h = y > h ? y : h;
-        fx = x < fx ? x : fx;
-        fy = y < fy ? y : fy;
-      }
+        if (pixels[idx + 3] > 0) {
+          dots.push(new S.Point({
+            x: x,
+            y: y
+          }));
 
-      x += gap;
-
-      if (x >= shapeCanvas.width) {
-        x = 0;
-        y += gap;
-        p += gap * 4 * shapeCanvas.width;
+          w = x > w ? x : w;
+          h = y > h ? y : h;
+          fx = x < fx ? x : fx;
+          fy = y < fy ? y : fy;
+        }
       }
     }
 
@@ -571,11 +573,42 @@ S.ShapeBuilder = (function () {
     },
 
     letter: function (l) {
-      var s = 0;
+      var s = 0,
+          str = String(l),
+          chars = str.split('');
 
       setFontSize(fontSize);
+
+      // 多字文本竖排显示（自上而下），倒计时等纯数字保持横排
+      if (chars.length > 1 && !isNumber(str)) {
+        var maxW = 1,
+            i, w;
+
+        for (i = 0; i < chars.length; i++) {
+          w = shapeContext.measureText(chars[i]).width;
+          if (w > maxW) {
+            maxW = w;
+          }
+        }
+
+        s = Math.min(fontSize,
+                    (shapeCanvas.width * 0.85 / maxW) * fontSize,
+                    shapeCanvas.height / (1.2 * chars.length));
+        setFontSize(s);
+
+        var lineH = s * 1.2,
+            startY = shapeCanvas.height / 2 - (lineH * (chars.length - 1)) / 2;
+
+        shapeContext.clearRect(0, 0, shapeCanvas.width, shapeCanvas.height);
+        for (i = 0; i < chars.length; i++) {
+          shapeContext.fillText(chars[i], shapeCanvas.width / 2, startY + i * lineH);
+        }
+
+        return processCanvas();
+      }
+
       s = Math.min(fontSize,
-                  (shapeCanvas.width / shapeContext.measureText(l).width) * 0.8 * fontSize, 
+                  (shapeCanvas.width / shapeContext.measureText(l).width) * 0.8 * fontSize,
                   (shapeCanvas.height / fontSize) * (isNumber(l) ? 1 : 0.45) * fontSize);
       setFontSize(s);
 
@@ -654,7 +687,7 @@ S.Shape = (function () {
 
       while (n.dots.length > 0) {
         i = Math.floor(Math.random() * n.dots.length);
-        dots[d].e = fast ? 0.25 : (dots[d].s ? 0.14 : 0.11);
+        dots[d].e = fast ? 0.35 : (dots[d].s ? 0.22 : 0.18);
 
         if (dots[d].s) {
           dots[d].move(new S.Point({
@@ -691,7 +724,7 @@ S.Shape = (function () {
           }));
 
           dots[i].s = false;
-          dots[i].e = 0.04;
+          dots[i].e = 0.08;
           dots[i].move(new S.Point({ 
             x: Math.random() * a.w,
             y: Math.random() * a.h,
