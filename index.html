@@ -21,7 +21,11 @@
             var iframe = document.getElementById('iframepage');
             var h = window.innerHeight;
             try {
-                h = iframe.contentWindow.document.body.scrollHeight;
+                var innerH = iframe.contentWindow.document.body.scrollHeight;
+                // 若 iframe 内文档高度小于视口（如内容为 absolute 定位导致高度塌陷），则使用视口高度
+                if (innerH > h) {
+                    h = innerH;
+                }
             } catch (e) {
                 // 本地以file://方式打开时可能受跨源限制，退回视口高度
             }
