@@ -158,26 +158,27 @@
     const rockets = [];
     const shards = [];
     const targets = [];
-    const fidelity = 3;
+    const fidelity = 2;
     let counter = 0;
     c2.width = c3.width = window.innerWidth;
     c2.height = c3.height = window.innerHeight;
     ctx1.fillStyle = '#000';
-    const text = '小寿星 要永远开心哦'
+    const text = '小寿星要永远开心哦'
     const chars = Array.from(text);
 
     // 竖排：自上而下逐字绘制，字号受限于单字宽度与整列高度
+    const LINE_SPACING = 1.55;
     const maxByWidth = window.innerWidth * 0.85;
-    const maxByHeight = window.innerHeight * 0.85 / (chars.length * 1.15);
+    const maxByHeight = window.innerHeight * 0.85 / (chars.length * LINE_SPACING);
     fontSize = Math.floor(Math.min(fontSize, maxByWidth, maxByHeight));
 
-    c1.width = Math.ceil(fontSize * 1.2);
-    c1.height = Math.ceil(fontSize * 1.15 * chars.length);
-    ctx1.font = `900 ${fontSize}px Arial`;
+    c1.width = Math.ceil(fontSize * 1.6);
+    c1.height = Math.ceil(fontSize * LINE_SPACING * chars.length);
+    ctx1.font = `700 ${fontSize}px "Microsoft YaHei", "SimHei", sans-serif`;
     ctx1.textAlign = 'center';
     ctx1.textBaseline = 'middle';
     chars.forEach((ch, i) => {
-      ctx1.fillText(ch, c1.width / 2, fontSize * 0.6 + i * fontSize * 1.15);
+      ctx1.fillText(ch, c1.width / 2, fontSize * 0.6 + i * fontSize * LINE_SPACING);
     });
     const imgData = ctx1.getImageData(0, 0, c1.width, c1.height);
     for (let i = 0, max = imgData.data.length; i < max; i += 4) {
@@ -192,7 +193,7 @@
 
     ctx3.fillStyle = '#FFF';
     ctx3.shadowColor = '#FFF';
-    ctx3.shadowBlur = 25;
+    ctx3.shadowBlur = 8;
 
     // ANIMATION LOOP
     (function loop() {
